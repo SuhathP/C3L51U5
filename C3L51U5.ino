@@ -8,7 +8,7 @@ void setup() {
 }
 
 void loop() {
-  C3L51U5.setSpeed(SLOW); 
+  C3L51U5.setSpeed(FAST); 
   C3L51U5.setMotion(LINEAR); 
   C3L51U5.updateMovement(); 
 

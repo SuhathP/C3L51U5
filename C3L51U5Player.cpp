@@ -22,10 +22,10 @@ void Player::initalizePins()
 
   pinMode(IR, INPUT); // Set up IR sensor pin.
 
-  pinMode(A01, OUTPUT); // Lastly, set up motor pins.
-  pinMode(A02, OUTPUT);
-  pinMode(B01, OUTPUT);
-  pinMode(B02, OUTPUT);
+  pinMode(AIN1, OUTPUT); // Lastly, set up motor pins.
+  pinMode(AIN2, OUTPUT);
+  pinMode(BIN1, OUTPUT);
+  pinMode(BIN2, OUTPUT);
   pinMode(APWM, OUTPUT);
   pinMode(BPWM, OUTPUT);
 }
@@ -63,54 +63,54 @@ void Player::updateMovement()
   switch (currentMotion) { // Set the appropriate motor settings for the current state motion.
 
     case PIVOTING:
-      digitalWrite(A01, HIGH);
-      digitalWrite(A02, LOW);
+      digitalWrite(AIN1, HIGH);
+      digitalWrite(AIN2, LOW);
 
-      digitalWrite(B01, HIGH);
-      digitalWrite(B02, HIGH);
+      digitalWrite(BIN1, HIGH);
+      digitalWrite(BIN2, HIGH);
 
       break;
 
     case SCANNING:   
-      digitalWrite(A01, HIGH);
-      digitalWrite(A02, LOW);
+      digitalWrite(AIN1, HIGH);
+      digitalWrite(AIN2, LOW);
 
-      digitalWrite(B01, LOW);
-      digitalWrite(B02, HIGH);
+      digitalWrite(BIN1, LOW);
+      digitalWrite(BIN2, HIGH);
 
       break;
     case LINEAR:
-      digitalWrite(A01, HIGH);
-      digitalWrite(A02, LOW);
+      digitalWrite(AIN1, HIGH);
+      digitalWrite(AIN2, LOW);
 
-      digitalWrite(B01, HIGH);
-      digitalWrite(B02, LOW);   
+      digitalWrite(BIN1, HIGH);
+      digitalWrite(BIN2, LOW);   
 
       break;  
     case COAST:
-      digitalWrite(A01, LOW);
-      digitalWrite(A02, LOW);
+      digitalWrite(AIN1, LOW);
+      digitalWrite(AIN2, LOW);
 
-      digitalWrite(B01, LOW);
-      digitalWrite(B02, LOW);
+      digitalWrite(BIN1, LOW);
+      digitalWrite(BIN2, LOW);
 
       break;
 
     case BRAKE:
-      digitalWrite(A01, HIGH);
-      digitalWrite(A02, HIGH);
+      digitalWrite(AIN1, HIGH);
+      digitalWrite(AIN2, HIGH);
 
-      digitalWrite(B01, HIGH);
-      digitalWrite(B02, HIGH);
+      digitalWrite(BIN1, HIGH);
+      digitalWrite(BIN2, HIGH);
 
       break;
 
     default: // By default, allow the bot to come to a hard stop (brake).
-      digitalWrite(A01, HIGH);
-      digitalWrite(A02, HIGH);
+      digitalWrite(AIN1, HIGH);
+      digitalWrite(AIN2, HIGH);
 
-      digitalWrite(B01, HIGH);
-      digitalWrite(B02, HIGH);
+      digitalWrite(BIN1, HIGH);
+      digitalWrite(BIN2, HIGH);
       break;
 
   }

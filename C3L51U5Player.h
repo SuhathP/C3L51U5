@@ -4,10 +4,10 @@
 #define TRIGGER 6 // Define constants for all of the trigger pins.
 #define ECHO 7
 #define IR 8
-#define A01 4
-#define A02 5
-#define B01 3
-#define B02 2
+#define AIN1 4
+#define AIN2 5
+#define BIN1 3
+#define BIN2 2
 #define APWM 10
 #define BPWM 9
 
