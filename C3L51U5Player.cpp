@@ -5,9 +5,9 @@ int Player::iterations = 0;
 
 Player::Player()
 {
-  currentSpeed = STATIONARY; // Initialize members to ensure robot is not moving and no objects are detected.
-  currentMotion = LINEAR;
-  currentPWM = STATIONARY_PWM;
+  currentTireSpeed = ZERO_PWM; // Initialize members to ensure robot is not moving and no objects are detected.
+  currentBotMotion = SCANNING;
+  currentPWM = 0;
   detectFlagField = 0;
   detectFlagGround = 0;
   objectDistance = 0;
@@ -17,7 +17,6 @@ void Player::initalizePins()
 {
   pinMode(TRIGGER, OUTPUT); // First, take care of ultrasonic sensor pins TRIGGER & ECHO.
   digitalWrite(TRIGGER, LOW);
-  delayMicroseconds(2);
   pinMode(ECHO, INPUT);
 
   pinMode(IR, INPUT); // Set up IR sensor pin.
@@ -30,21 +29,21 @@ void Player::initalizePins()
   pinMode(BPWM, OUTPUT);
 }
 
-void Player::setSpeed(Speed newSpeed) 
+void Player::setTireSpeed(TireSpeed newTireSpeed) 
 {
-  currentSpeed = newSpeed; // Set the speed to the new setting.
+  currentTireSpeed = newTireSpeed; // Set the speed to the new setting.
 }
 
-void Player::setMotion(Motion newMotion) 
+void Player::setBotMotion(BotMotion newBotMotion) 
 {
-  currentMotion = newMotion; // Set the motion to the new setting.
+  currentBotMotion = newBotMotion; // Set the motion to the new setting.
 }
 
 void Player::updateMovement()
 {
-  switch (currentSpeed) { // Set the PWM of the motor to the correct defined constant for speed control.
-    case STATIONARY:
-      currentPWM = STATIONARY_PWM;
+  switch (currentTireSpeed) { // Set the PWM of the motor to the correct defined constant for speed control.
+    case ZERO:
+      currentPWM = ZERO_PWM;
       break;
     case SLOW: 
       currentPWM = SLOW_PWM;
@@ -56,15 +55,15 @@ void Player::updateMovement()
       currentPWM = FAST_PWM;
       break;
     default:
-      currentPWM = STATIONARY_PWM;
+      currentPWM = ZERO_PWM;
       break;
   }
       
-  switch (currentMotion) { // Set the appropriate motor settings for the current state motion.
+  switch (currentBotMotion) { // Set the appropriate motor settings for the current state motion.
 
     case PIVOTING:
-      digitalWrite(AIN1, HIGH);
-      digitalWrite(AIN2, LOW);
+      digitalWrite(AIN1, LOW);
+      digitalWrite(AIN2, HIGH);
 
       digitalWrite(BIN1, HIGH);
       digitalWrite(BIN2, HIGH);
@@ -124,38 +123,38 @@ void Player::updateMovement()
 
 void Player::scanField() 
 {
-  sendPulse(); // Send a pulse, obtain the distance, and set the object detection flag while the bot is spinning.
-  float distance = getObjectDistance();
-  setObjectDetectionFlag(distance);
+  digitalWrite(TRIGGER, LOW);
+  delayMicroseconds(2);
+  digitalWrite(TRIGGER, HIGH); // Send a 10 us pulse to the sensor.
+  delayMicroseconds(10);
+  digitalWrite(TRIGGER, LOW);
+
+  float objectDistance = getObjectDistance();
+  setObjectDetectionFlag(objectDistance);
+  Serial.print(objectDistance);
+  Serial.print("\n");
 }
 
 void Player::strikePlayer()
 {
-  setMotion(LINEAR); // When striking, set the motion to linear and fast to attack the player.
-  setSpeed(FAST);
+  setBotMotion(LINEAR); // When striking, set the motion to linear and fast to attack the player.
+  setTireSpeed(FAST);
   updateMovement();
 
-  setMotion(COAST); // Afterward, coast to a stop.
+  setBotMotion(COAST); // Afterward, coast to a stop.
   updateMovement();
-}
-
-void Player::sendPulse()
-{
-  digitalWrite(TRIGGER, HIGH); // Send a 10 us pulse to the sensor.
-  delayMicroseconds(10);
-  digitalWrite(TRIGGER, LOW);
 }
 
 float Player::getObjectDistance()
 {
-  float duration = pulseIn(ECHO, HIGH); // Calculation and returning of the distance if the duration recorded is non-zero (indicating object detected).
-  if (!(int)duration) return duration/58.3;
+  unsigned long duration = pulseIn(ECHO, HIGH, TIMEOUT); // Calculation and returning of the distance if the duration recorded is non-zero (indicating object detected).
+  if (duration != 0) return duration/58.3f;
   else return 0;
 }
 
 void Player::setObjectDetectionFlag(float distance)
 {
-  (distance < 70 && (int)distance != 0) ? detectFlagField = true : detectFlagField = false; // If distance is not 0 and less than 60, indicate that we have detected something.
+  (distance < 70 && distance > 0) ? detectFlagField = true : detectFlagField = false; // If distance is not 0 and less than 60, indicate that we have detected something.
 }
 
 void Player::checkGround()
