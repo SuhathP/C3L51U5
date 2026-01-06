@@ -117,18 +117,11 @@ void Player::updateMovement()
   analogWrite(APWM, currentPWM); // After settings are set, start running motor at current speed.
   analogWrite(BPWM, currentPWM);  
 
-  //if (currentMotion != PIVOTING || currentMotion != SCANNING) 
-  //delay(MOVEMENT_DELAY); 
 }
 
 void Player::scanField() 
 {
-  digitalWrite(TRIGGER, LOW);
-  delayMicroseconds(2);
-  digitalWrite(TRIGGER, HIGH); // Send a 10 us pulse to the sensor.
-  delayMicroseconds(10);
-  digitalWrite(TRIGGER, LOW);
-
+  sendPulse();
   float objectDistance = getObjectDistance();
   setObjectDetectionFlag(objectDistance);
   Serial.print(objectDistance);
@@ -139,12 +132,18 @@ void Player::strikePlayer()
 {
   setBotMotion(LINEAR); // When striking, set the motion to linear and fast to attack the player.
   setTireSpeed(FAST);
-  updateMovement();
-
-  setBotMotion(COAST); // Afterward, coast to a stop.
-  updateMovement();
+  updateMovement()
 }
 
+void Player::sendPulse()
+{
+  digitalWrite(TRIGGER, LOW);
+  delayMicroseconds(2);
+  digitalWrite(TRIGGER, HIGH); // Send a 10 us pulse to the sensor.
+  delayMicroseconds(10);
+  digitalWrite(TRIGGER, LOW);
+
+}
 float Player::getObjectDistance()
 {
   unsigned long duration = pulseIn(ECHO, HIGH, TIMEOUT); // Calculation and returning of the distance if the duration recorded is non-zero (indicating object detected).

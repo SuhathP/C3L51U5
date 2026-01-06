@@ -13,17 +13,24 @@ void loop() {
   while (C3L51U5.getTotalIterations() == 0)
   {
     C3L51U5.setTireSpeed(SLOW); 
-    C3L51U5.setBotMotion(SCANNING); 
     C3L51U5.updateMovement();
 
     while (!C3L51U5.getFieldDetectionFlag())
     {
       C3L51U5.scanField();
-      delay(50);
+      delay(DELAY_SCAN);
     }
-
+    
     C3L51U5.strikePlayer();
+
+    while (C3L51U5.getFieldDetectionFlag())
+    {
+      C3L51U5.scanField();
+      delay(DELAY_SCAN);
+    }
+    
     C3L51U5.setBotMotion(BRAKE); 
+    delay(MOVEMENT_DELAY);
     
     C3L51U5.incrementIterations();
   }

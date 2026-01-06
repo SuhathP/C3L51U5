@@ -16,9 +16,10 @@
 #define MODERATE_PWM 128
 #define FAST_PWM 255
 
-#define MOVEMENT_DELAY 100 // Define constant for our pulse movement.
+#define DELAY_SCAN 20 // Define constant for our pulse movement.
 #define ULTRASONIC_PULSE_US 10 // Define constant for our ultrasonic sensor pulse.
 #define TIMEOUT 38000 // Define constant for our timeout in ultrasonic sensor.
+#define MOVEMENT_DELAY 200 
 
 enum TireSpeed {ZERO, SLOW, MODERATE, FAST}; // Enumeration to control the speed of the robot, corresponding with power levels / PWM.
 enum BotMotion {SCANNING, PIVOTING, LINEAR, COAST, BRAKE}; // Enumeration to control the motion of the robot
@@ -42,6 +43,7 @@ class Player {
     void setBotMotion(BotMotion); // Motion Setter
 
     void scanField(); // Field Scanner Function
+    void sendPulse();
     void strikePlayer(); // Send Robot Towards Opponent Function
 
     void checkGround();
