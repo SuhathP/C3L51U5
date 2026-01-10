@@ -2,14 +2,16 @@
 #include <Arduino.h>
 
 Player::Player() {
-  currentTireSpeed = ZERO_PWM;  // Initialize members to ensure robot is not moving and no objects are detected.
+  currentTireSpeed = ZERO_PWM;
+  currentVarTireSpeed = ZERO_PWM;  // Initialize members to ensure robot is not moving and no objects are detected.
   currentBotMotion = BRAKE;
   currentPWM = 0;
   detectFlagField = 0;
   detectFlagGround = 0;
+  accelerating = 0;
   objectDistance = 0;
   iterations = 0;
-  linearZeroes = 0;
+  linearErrors = 0;
 }
 
 void Player::initalizePins() {
@@ -31,27 +33,35 @@ void Player::setTireSpeed(TireSpeed newTireSpeed) {
   currentTireSpeed = newTireSpeed;  // Set the speed to the new setting.
 }
 
+void Player::setTireSpeed(int newTireSpeed) {
+  currentVarTireSpeed = newTireSpeed;  // Set the speed to the new setting.
+}
+
 void Player::setBotMotion(BotMotion newBotMotion) {
   currentBotMotion = newBotMotion;  // Set the motion to the new setting.
 }
 
 void Player::updateMovement() {
-  switch (currentTireSpeed) {  // Set the PWM of the motor to the correct defined constant for speed control.
-    case ZERO:
-      currentPWM = ZERO_PWM;
-      break;
-    case SLOW:
-      currentPWM = SLOW_PWM;
-      break;
-    case MODERATE:
-      currentPWM = MODERATE_PWM;
-      break;
-    case FAST:
-      currentPWM = FAST_PWM;
-      break;
-    default:
-      currentPWM = ZERO_PWM;
-      break;
+  if (!accelerating) {
+    switch (currentTireSpeed) {  // Set the PWM of the motor to the correct defined constant for speed control.
+      case ZERO:
+        currentPWM = ZERO_PWM;
+        break;
+      case SLOW:
+        currentPWM = SLOW_PWM;
+        break;
+      case MODERATE:
+        currentPWM = MODERATE_PWM;
+        break;
+      case FAST:
+        currentPWM = FAST_PWM;
+        break;
+      default:
+        currentPWM = ZERO_PWM;
+        break;
+    }
+  } else {
+    currentPWM = currentVarTireSpeed;
   }
 
   switch (currentBotMotion) {  // Set the appropriate motor settings for the current state motion.
@@ -81,6 +91,15 @@ void Player::updateMovement() {
       digitalWrite(BIN2, LOW);
 
       break;
+    
+    case LINEAR_REVERSE:
+      digitalWrite(AIN1, LOW);
+      digitalWrite(AIN2, HIGH);
+
+      digitalWrite(BIN1, LOW);
+      digitalWrite(BIN2, HIGH);
+
+      break;
     case COAST:
       digitalWrite(AIN1, LOW);
       digitalWrite(AIN2, LOW);
@@ -108,27 +127,49 @@ void Player::updateMovement() {
       break;
   }
 
-  analogWrite(APWM, currentPWM);  // After settings are set, start running motor at current speed.
+  analogWrite(APWM, ERROR_TIRES*currentPWM);  // After settings are set, start running motor at current speed.
   analogWrite(BPWM, currentPWM);
 
-  if (currentBotMotion != LINEAR || currentBotMotion != SCANNING) delay(MOVEMENT_DELAY);
+  if (currentBotMotion != LINEAR && currentBotMotion != SCANNING) delay(MOVEMENT_DELAY);
 }
 
 void Player::scanField() {
   sendPulse();
-  float objectDistance = getObjectDistance();
+  objectDistance = getObjectDistance();
   setObjectDetectionFlag(objectDistance);
 
-  Serial.print(objectDistance);
-  Serial.print("\n");
-
-  toleranceControl();
+  if (currentBotMotion == LINEAR)
+    toleranceControl();
 }
 
 void Player::strikePlayer() {
   setBotMotion(LINEAR);  // When striking, set the motion to linear and fast to attack the player.
   setTireSpeed(SLOW);
   updateMovement();
+
+  accelerating = 1;
+
+  for (int i = 1; i <= FAST_PWM - SLOW_PWM; i++) {
+    setTireSpeed(SLOW_PWM + i);
+    updateMovement();
+    delay(ACCELERATION_DELAY);
+    scanField();
+
+    if (!detectFlagField) break;
+  }
+}
+
+void Player::dodgePlayer() {
+  
+  setBotMotion(PIVOTING);  // When striking, set the motion to linear and fast to attack the player.
+  setTireSpeed(MODERATE);
+  updateMovement();
+  delay(1000);
+
+  setBotMotion(LINEAR_REVERSE);  // When striking, set the motion to linear and fast to attack the player.
+  setTireSpeed(MODERATE);
+  updateMovement();
+  delay(500);
 }
 
 void Player::sendPulse() {
@@ -145,15 +186,17 @@ float Player::getObjectDistance() {
 }
 
 void Player::setObjectDetectionFlag(float distance) {
-  (distance < 70 && distance > 0) ? detectFlagField = true : detectFlagField = false;  // If distance is not 0 and less than 60, indicate that we have detected something.
+  (distance < DISTANCE_DETECTION && distance > 0) ? detectFlagField = true : detectFlagField = false;  // If distance is not 0 and less than 60, indicate that we have detected something.
 }
 
 void Player::setGroundDetectionFlag(int color) {
-  color ? detectFlagGround = true : detectFlagGround = false;
+  color ? detectFlagGround = false : detectFlagGround = true;
 }
 
 void Player::checkGround() {
   int color = digitalRead(IR);
+  Serial.print(color);
+  Serial.print("\n");
   setGroundDetectionFlag(color);
 }
 
@@ -176,11 +219,13 @@ int Player::getTotalIterations() {
 
 void Player::iterativeControl() {
   iterations++;
-  linearZeroes = 0;
+  linearErrors = 0;
+  accelerating = 0;
 }
 
 void Player::toleranceControl() {
-  if (objectDistance == 0 && currentBotMotion == LINEAR) linearZeroes++;
-  if (linearZeroes < TOLERANCE_ZEROES) detectFlagField = 0;
+  if (objectDistance == 0 || objectDistance >= DISTANCE_DETECTION) linearErrors++;
+  else linearErrors = 0;
+  if (linearErrors < TOLERANCE_VALUES) detectFlagField = 1;
 }
 // testing commit
