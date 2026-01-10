@@ -20,10 +20,10 @@
 
 #define DELAY_SCAN 50 // Define delays for scanning, ultrasonic sensor timeout, movement delays, tolerance/acceleration values, and distance which the sensor goes on by default.
 #define TIMEOUT 38000
-#define MOVEMENT_DELAY 100
+#define STOP_DELAY 100
 #define DODGE_DELAY 60
 #define ACCELERATION_DELAY 5
-#define TOLERANCE_VALUES 5
+#define TOLERANCE_VALUES 3
 #define DISTANCE_DETECTION 60
 
 enum TireSpeed { ZERO, SLOW, MODERATE, FAST }; // Declare enumerations for each of our finite state machines, one for bot motion and one for tire speed.

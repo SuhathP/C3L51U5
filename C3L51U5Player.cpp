@@ -97,8 +97,8 @@ void Player::updateMovement() {
     analogWrite(BPWM, currentPWM);
   }
 
-  if (currentBotMotion != LINEAR && currentBotMotion != SCANNING) // Always set a delay if it is not already accounted for in the main program.
-    delay(MOVEMENT_DELAY);
+  if (currentBotMotion == COAST || currentBotMotion == BRAKE) // Always set a delay if its stopping.
+    delay(STOP_DELAY);
 }
 
 void Player::scanField() {
