@@ -1,71 +1,41 @@
 #include "C3L51U5Player.h"
 
-Player C3L51U5;  // Create object for SumoBot.
+Player C3L51U5; // Declare the player globally.
 
 void setup() {
-  Serial.begin(9600);
-  C3L51U5.initalizePins();
-  delay(5000);  // Required 5 s delay.
+  C3L51U5.initalizePins(); // Initalize pins.
+  delay(5000);  // Required 5 second delay before match
 }
 
 void loop() {
-  C3L51U5.setBotMotion(SCANNING);
+  C3L51U5.setBotMotion(SCANNING); // Begin the code in scanning (rotate) mode.
   C3L51U5.setTireSpeed(SLOW);
   C3L51U5.updateMovement();
 
   while (!C3L51U5.getFieldDetectionFlag()) {
-    C3L51U5.scanField();
-    delay(DELAY_SCAN);
+    C3L51U5.scanField(); // Scan the field, but also include a delay to ensure no faulty measurement.
+    delay(DELAY_SCAN); 
   }
 
-  C3L51U5.strikePlayer();
+  C3L51U5.strikePlayer(); // Accelerate and strike the player.
 
-  while (C3L51U5.getFieldDetectionFlag()) {
+  while (C3L51U5.getFieldDetectionFlag()) { // If we are still detecting the player, keep striking.
     C3L51U5.scanField();
-    delay(DELAY_SCAN);
+
+    if (C3L51U5.getGroundDetectionFlag()) { // To avoid confusion, simply use the getter for detection flag for the ground to avoid helper functions within the class.
+      break; // Exit if we detect the rim to the logic below.
+    }
+    delay(DELAY_SCAN); // Always have a delay between scans.
   }
 
-  C3L51U5.setBotMotion(BRAKE);
+  C3L51U5.setBotMotion(BRAKE); // Always stop the robot before anything else happens.
   C3L51U5.updateMovement();
 
-  C3L51U5.resetFlags();
+  if (C3L51U5.getGroundDetectionFlag()) { // If we stopped because of the ground, dodge and continue.
+      delay(DELAY_SCAN); // Short settle, using the same constant for the SCAN delay.
+      C3L51U5.dodgePlayer();
+  }
+
+  C3L51U5.resetFlags(); // Reset the flags and control our iterations.
   C3L51U5.iterativeControl();
 }
-
-/*
-
-void loop() {
-  C3L51U5.setBotMotion(SCANNING);
-  C3L51U5.setTireSpeed(SLOW);
-  C3L51U5.updateMovement();
-
-  while (!C3L51U5.getFieldDetectionFlag()) {
-    C3L51U5.scanField();
-    delay(DELAY_SCAN);
-  }
-
-  // Step 2 — run strike forward
-  C3L51U5.strikePlayer();
-
-  // Step 3 — CONTINUE forward until no enemy OR ground found
-  while (C3L51U5.getFieldDetectionFlag() && !C3L51U5.getGroundDetectionFlag()) {
-    C3L51U5.scanField();
-    C3L51U5.checkGround();
-    C3L51U5.setBotMotion(LINEAR);
-    C3L51U5.updateMovement();
-    delay(DELAY_SCAN);
-  }
-
-  // Step 4 — If ground detected → dodge
-  if (C3L51U5.getGroundDetectionFlag()) {
-    C3L51U5.dodgePlayer();
-  }
-
-  // Step 5 — brake, reset, start over
-  C3L51U5.setBotMotion(BRAKE);
-  C3L51U5.updateMovement();
-  C3L51U5.resetFlags();
-  C3L51U5.iterativeControl();
-}
-
-*/
