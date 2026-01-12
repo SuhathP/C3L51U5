@@ -13,7 +13,7 @@
 #define BPWM 9
 
 #define ZERO_PWM 0 // Define our PWM values for each of the states of the finite state machine, along with error to account for tire resistance.
-#define SLOW_PWM 30
+#define SLOW_PWM 45
 #define MODERATE_PWM 100
 #define FAST_PWM 250
 #define ERROR_TIRES 1
